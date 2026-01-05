@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Header from './components/Header.vue';
 import Hero from './components/Hero.vue';
@@ -11,9 +11,41 @@ import Footer from './components/Footer.vue';
 
 const { locale } = useI18n();
 
-const toggleLanguage = () => {
-  locale.value = locale.value === 'zh' ? 'en' : 'zh';
+// 从cookie获取语言设置
+const getLocaleFromCookie = (): string => {
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith('locale=')) {
+      const locale = cookie.substring('locale='.length);
+      if (locale === 'en' || locale === 'zh') {
+        return locale;
+      }
+    }
+  }
+  return 'en'; // 默认语言为英语
 };
+
+// 设置语言到cookie
+const setLocaleToCookie = (locale: string) => {
+  const date = new Date();
+  date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30天
+  document.cookie = `locale=${locale}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+};
+
+const toggleLanguage = () => {
+  const newLocale = locale.value === 'zh' ? 'en' : 'zh';
+  locale.value = newLocale;
+  setLocaleToCookie(newLocale);
+};
+
+// 页面加载时检查cookie中的语言设置
+onMounted(() => {
+  const savedLocale = getLocaleFromCookie();
+  if (savedLocale !== locale.value) {
+    locale.value = savedLocale;
+  }
+});
 </script>
 
 <template>
