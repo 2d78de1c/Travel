@@ -208,45 +208,31 @@ const messages = {
   }
 };
 
-// 从cookie获取语言设置
-const getLocaleFromCookie = (): string => {
-  // 查找cookie中存储的语言设置
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i].trim();
-    if (cookie.startsWith('locale=')) {
-      const locale = cookie.substring('locale='.length);
-      // 验证语言代码是否有效
-      if (locale === 'en' || locale === 'zh') {
-        return locale;
-      }
-    }
+// 从localStorage获取语言设置
+const getLocaleFromLocalStorage = (): string => {
+  const locale = localStorage.getItem('locale');
+  // 验证语言代码是否有效
+  if (locale === 'en' || locale === 'zh') {
+    return locale;
   }
-  // 如果cookie中没有语言设置，则返回默认语言
+  // 如果localStorage中没有语言设置，则返回默认语言
   return 'en'; // 根据项目规范，面向国外用户，默认语言应设置为英语
 };
 
-// 设置语言到cookie
-const setLocaleToCookie = (locale: string) => {
-  // 设置cookie，有效期为30天
-  const date = new Date();
-  date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30天
-  document.cookie = `locale=${locale}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+// 设置语言到localStorage
+const setLocaleToLocalStorage = (locale: string) => {
+  localStorage.setItem('locale', locale);
 };
 
 // 创建 i18n 实例
 const i18n = createI18n({
   legacy: false, // 使用 Composition API 模式
-  locale: getLocaleFromCookie(), // 从cookie获取语言设置
+  locale: getLocaleFromLocalStorage(), // 从localStorage获取语言设置
   fallbackLocale: 'en', // 回退语言
   messages,
 });
 
-// 监听语言变化并保存到cookie
-if (i18n.global) {
-  i18n.global.onLanguageSwitched = (oldLocale: string, newLocale: string) => {
-    setLocaleToCookie(newLocale);
-  };
-}
+// 导出设置语言到localStorage的函数，供App.vue使用
+export { setLocaleToLocalStorage };
 
 export default i18n;
